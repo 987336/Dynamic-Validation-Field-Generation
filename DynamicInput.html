@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Input Creator with Validation</title>
+    <style>
+         body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .input-container {
+            margin-top: 10px;
+        }
+        .html-code, .js-code {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f4f4f4;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            overflow: auto;
+            max-height: 300px;
+        }
+        #htmlCodeContainer, #jsCodeContainer {
+            border: 1px solid lightblue;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .hidden {  
+            display: none;
+        }
+        .error {
+            color: red;
+            font-size: 12px;
+        }
+        /* Syntax highlighting styles */
+        .syntax-keyword {
+            color: blue;
+            font-weight: bold;
+        }
+        .syntax-string {
+            color: green;
+        }
+        .syntax-comment {
+            color: grey;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dynamic Input Creator with Validation</h1>
+    
+    <div>
+        <label for="inputType">Input Type:</label>
+        <select id="inputType">
+            <option value="text">Text</option>
+            <option value="number">Number</option>
+            <option value="email">Email</option>
+            <option value="tel">Telephone</option>
+            <option value="url">URL</option>
+            <option value="password">Password</option>
+            <option value="date">Date</option>
+            <option value="datetime-local">Date & Time</option>
+            <option value="month">Month</option>
+            <option value="week">Week</option>
+            <option value="time">Time</option>
+            <option value="search">Search</option>
+            <option value="color">Color</option>
+            <option value="file">File</option>
+            <!-- Add more options as needed -->
+        </select>
+        
+        <input type="text" id="inputClass" placeholder="Input Class" />
+        <input type="text" id="inputId" placeholder="Input ID" />
+        
+        <input type="text" id="inputPlaceholder" placeholder="Placeholder" class="hidden" />
+        <input type="number" id="inputMaxlength" placeholder="Maxlength" min="1" class="hidden" />
+        
+        <button id="addInputBtn">Add Input</button>
+    </div>
+    
+    <div id="inputFieldsContainer">
+        <h1>Input Fields:</h1>
+    </div>
+
+    <div id="htmlCodeContainer">
+        <h1>Generated HTML Code:</h1>
+        <br>
+        <div class="html-code" id="generatedHtmlCode"></div>
+    </div>
+    
+    <div id="jsCodeContainer">
+        <h2>Generated JS Validation Code:</h2>
+        <br>
+        <div class="js-code" id="generatedJsCode"></div>
+    </div>
+    
+    <script src="./validation.js"></script>
+    <script>
+        const inputTypeSelect = document.getElementById('inputType');
+        const inputPlaceholder = document.getElementById('inputPlaceholder');
+        const inputMaxlength = document.getElementById('inputMaxlength');
+        const addInputBtn = document.getElementById('addInputBtn');
+        const inputFieldsContainer = document.getElementById('inputFieldsContainer');
+
+        // Function to check and toggle visibility of placeholder and maxlength
+        const toggleFieldsVisibility = () => {
+            const inputType = inputTypeSelect.value;
+
+            if (['text', 'email', 'tel', 'url', 'password', 'search'].includes(inputType)) {
+                inputPlaceholder.classList.remove('hidden');
+            } else {
+                inputPlaceholder.classList.add('hidden');
+            }
+
+            if (['text', 'password', 'email', 'search', 'tel'].includes(inputType)) {
+                inputMaxlength.classList.remove('hidden');
+            } else {
+                inputMaxlength.classList.add('hidden');
+            }
+        };
+
+        inputTypeSelect.addEventListener('change', toggleFieldsVisibility);
+        toggleFieldsVisibility();
+
+        addInputBtn.addEventListener('click', () => {
+            const inputType = inputTypeSelect.value;
+            const inputClass = document.getElementById('inputClass').value;
+            const inputId = document.getElementById('inputId').value;
+            const inputPlaceholderValue = document.getElementById('inputPlaceholder').value;
+            const inputMaxlengthValue = document.getElementById('inputMaxlength').value;
+
+            // Create the input field
+            const inputField = document.createElement('input');
+            inputField.type = inputType;
+            inputField.className = inputClass;
+            inputField.id = inputId;
+
+            if (!inputPlaceholder.classList.contains('hidden') && inputPlaceholderValue) {
+                inputField.placeholder = inputPlaceholderValue;
+            }
+
+            if (!inputMaxlength.classList.contains('hidden') && inputMaxlengthValue) {
+                inputField.maxLength = inputMaxlengthValue;
+            }
+
+            const container = document.createElement('div');
+            container.className = 'input-container';
+            container.appendChild(inputField);
+
+            const errorMessage = document.createElement('div');
+            errorMessage.className = 'error hidden';
+            container.appendChild(errorMessage);
+
+            inputFieldsContainer.appendChild(container);
+
+            // Validation function to validate the input
+            const validateInputById = (inputId) => {
+                const inputElement = document.getElementById(inputId);
+                const regexPattern = validationRules[inputId];
+
+                // Use regexPattern directly if it's available
+                if (regexPattern && !regexPattern.test(inputElement.value)) {
+                    errorMessage.textContent = 'Invalid input format';
+                    errorMessage.classList.remove('hidden');
+                } else {
+                    errorMessage.textContent = '';
+                    errorMessage.classList.add('hidden');
+                }
+            };
+
+            // Attach input event listener for validation
+            inputField.addEventListener('input', () => validateInputById(inputId));
+
+            // Generate HTML code
+            let htmlCode = `<div class="input-container">\n`;
+            htmlCode += `    <input type="${inputType}"`;
+            if (inputClass) htmlCode += ` class="${inputClass}"`;
+            if (inputId) htmlCode += ` id="${inputId}"`;
+            if (inputPlaceholderValue && !inputPlaceholder.classList.contains('hidden')) {
+                htmlCode += ` placeholder="${inputPlaceholderValue}"`;
+            }
+            if (inputMaxlengthValue && !inputMaxlength.classList.contains('hidden')) {
+                htmlCode += ` maxlength="${inputMaxlengthValue}"`;
+            }
+            htmlCode += ` />\n`;
+            htmlCode += `    <div class="error hidden"></div>\n`; // Error message container
+            htmlCode += `</div>\n`;
+
+            // Display the generated HTML code
+            document.getElementById('htmlCodeContainer').innerText += htmlCode;
+
+            // Generate JS validation code using the regex pattern directly
+            const regexPattern = validationRules[inputId] ? validationRules[inputId].source : '';
+            const jsCode = `document.getElementById('${inputId}').addEventListener('input', function() {\n` +
+                `    const value = this.value;\n` +
+                `    const regex = /${regexPattern}/; // Regex for ${inputId}\n` + 
+                `    const errorMessage = document.querySelector('#${inputId} ~ .error');\n` +
+                `    if (regex && !regex.test(value)) {\n` +
+                `        errorMessage.textContent = 'Invalid input format';\n` +
+                `        errorMessage.classList.remove('hidden');\n` +
+                `    } else {\n` +
+                `        errorMessage.textContent = '';\n` +
+                `        errorMessage.classList.add('hidden');\n` +
+                `    }\n` +
+                `});\n\n`;
+
+            // Display the generated JS validation code
+            document.getElementById('jsCodeContainer').innerText += jsCode;
+        });
+    </script>
+</body>
+</html>
